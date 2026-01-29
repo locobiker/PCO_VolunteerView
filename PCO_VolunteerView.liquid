@@ -1,3 +1,4 @@
+
 <!--
   Jan 2026 Updates:
 - Plugged it into AI and it recommended to use the CSS Grid structure.  Which worked great in Web printout, but not PDF.  We want it working for both.
@@ -10,7 +11,7 @@
 
 QUICK CUSTOMIZATION:
 
-  {% assign MaxCol = 13 %}  
+  {% assign MaxCol = 11 %}  
   {% assign max_sidebar_weight = 40 %}
 
 {% comment %} 
@@ -160,22 +161,22 @@ QUICK CUSTOMIZATION:
  {% comment %} ** FOH AREA ** {% endcomment %}
 
      {% assign Cam1_Row = 7 %}   
-     {% assign Cam1_Column = 3 %}  
+     {% assign Cam1_Column = 2 %}  
 
      {% assign Cam2_Row = 7 %}   
-     {% assign Cam2_Column = 5 %} 
+     {% assign Cam2_Column = 3 %} 
 
      {% assign Cam3_Row = 7 %}   
-     {% assign Cam3_Column = 7 %}   
+     {% assign Cam3_Column = 4 %}   
 
      {% assign LightDirector_Row = 7 %}   
-     {% assign LightDirector_Column = 9 %}  
+     {% assign LightDirector_Column = 7 %}  
 
      {% assign AudioDirector_Row = 7 %}   
-     {% assign AudioDirector_Column = 10 %}   
+     {% assign AudioDirector_Column = 8 %}   
 
      {% assign Producer_Row = 7 %}   
-     {% assign Producer_Column = 11 %} 
+     {% assign Producer_Column = 9 %} 
 
 
 {% comment %} DATA COLLECTION  {% endcomment %}
@@ -387,6 +388,32 @@ QUICK CUSTOMIZATION:
            font-size: 10pt;
          }
 
+            /* Print-specific styles for PDF */
+            @media print {
+                .layout-table {
+                    table-layout: fixed;
+                }
+                
+                .sidebar-content {
+                    width: 20% !important;
+                    min-width: 20% !important;
+                    max-width: 20% !important;
+                }
+                
+                .main-content {
+                    width: 60% !important;
+                    min-width: 60% !important;
+                    max-width: 60% !important;
+                    overflow: visible;
+                }
+                
+                body {
+                    width: 100%;
+                    margin: 0;
+                    padding: 0;
+                }
+            }
+          
         .sidebar-content {
            vertical-align: top;
            background-color: black;
@@ -396,6 +423,20 @@ QUICK CUSTOMIZATION:
            padding-top: 20px;
            font-size: 14pt;
            width: 20%;
+           min-width: 20%;
+           max-width: 20%;
+           border: none;
+           overflow: hidden;
+         }
+          
+         /* Sidebar tables */
+         .sidebar-content table {
+              border: none;
+              border-collapse: collapse;
+         }
+
+         .sidebar-content table td {
+             border: none;
          }
 
        .main-content {
@@ -405,6 +446,7 @@ QUICK CUSTOMIZATION:
           color: white;
           font-size: 12pt;
           width: 60%;
+          overflow: hidden;
        }
 
        .grid-cell {
@@ -454,6 +496,7 @@ QUICK CUSTOMIZATION:
 
      .layout-table {
         width: 100%;
+        table-layout: fixed;
      }
 
      /* Divider styling */
