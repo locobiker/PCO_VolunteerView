@@ -1,0 +1,665 @@
+<!--
+  Jan 2026 Updates:
+- Plugged it into AI and it recommended to use the CSS Grid structure.  Which worked great in Web printout, but not PDF.  We want it working for both.
+- Smarter Day recognition so we do not need three report types.  Should work with saturday, sunday, or special events now.
+- Support for new vocal types (alto, tenor, soprano)
+- support for multiple bass guitars
+- new camera positions based on room updates
+- leads get their own row now
+- Dynamic splitting of left/right content.  Change max_sidebar_weight to fit page.
+
+QUICK CUSTOMIZATION:
+
+  {% assign MaxCol = 13 %}  
+  {% assign max_sidebar_weight = 40 %}
+
+{% comment %} 
+    DAY DETECTION:
+ - If Production Team exists, just use that.  We use this for special events.
+ - If It is before or on saturday, it will go with Saturday Production Team
+ - If it is after 5pm on Saturday or on sunday, it will use the Sunday Production Team
+{% endcomment %}
+{% assign detected_day = "" %}
+{% assign has_saturday_team = false %}
+{% assign has_sunday_team = false %}
+{% assign has_generic_team = false %}
+
+{% for plan_person in plan.plan_people_not_declined %}
+    {% assign category_lower = plan_person.category.name | downcase %}
+    {% assign category_trimmed = category_lower | strip %}
+    
+    {% if category_trimmed == "production team" %}
+        {% assign has_generic_team = true %}
+    {% endif %}
+    
+    {% if category_lower contains "saturday production team" %}
+        {% assign has_saturday_team = true %}
+    {% endif %}
+    {% if category_lower contains "sunday production team" %}
+        {% assign has_sunday_team = true %}
+    {% endif %}
+{% endfor %}
+
+{% if has_generic_team %}
+    {% assign detected_day = "production team" %}
+{% else %}
+    {% assign current_date = "now" | date: "%Y-%m-%d %H:%M" %}
+    {% assign day_of_week = "now" | date: "%A" %}
+    {% assign day_of_week_lower = day_of_week | downcase %}
+    {% assign current_hour = "now" | date: "%H" | plus: 0 %}
+    
+    {% if day_of_week_lower == "sunday" %}
+        {% assign detected_day = "sunday" %}
+    {% elsif day_of_week_lower == "saturday" and current_hour >= 17 %}
+        {% assign detected_day = "sunday" %}
+    {% else %}
+        {% assign detected_day = "saturday" %}
+    {% endif %}
+    
+    {% if detected_day == "saturday" and has_saturday_team == false and has_sunday_team %}
+        {% assign detected_day = "sunday" %}
+    {% elsif detected_day == "sunday" and has_sunday_team == false and has_saturday_team %}
+        {% assign detected_day = "saturday" %}
+    {% endif %}
+{% endif %}
+
+-->
+{% comment %} IMAGE URLS {% endcomment %}
+{% assign img_camera = '<img src="https://drive.google.com/thumbnail?id=1CfIJRH7uPKasaclLQfxRdY5JEb3f3caB&sz=w200" style="width:35px;height:35px;" class="icon">' %}
+{% assign img_camera_track = '<img src="https://drive.google.com/thumbnail?id=1pNOvrs_4v2l5fCkpy4W0bAuCf_o6YESB&sz=w200" style="width:35px;height:35px;" class="icon">' %}
+{% assign img_camera_jib = '<img src="https://drive.google.com/thumbnail?id=1CZTSpyvMMLL4Qz6R1nmuU88Q8TLEAZBY&sz=w200" style="width:100px;height:50px;" class="icon">' %}
+{% assign img_camera_roam = '<img src="https://drive.google.com/thumbnail?id=13i1WUDp9dvlpxXdUo04Cj4RZcPC9eG3g&sz=w200" style="width:35px;height:35px;" class="icon">' %}
+{% assign img_media_director = '<img src="https://drive.google.com/thumbnail?id=1F4TRPPA90f6OL59yT-6e7GmTBGRBGYp6&sz=w200" style="width:35px;height:35px;" class="icon">' %}
+{% assign img_asst_media_director = '<img src="https://drive.google.com/thumbnail?id=1TkkE7AziARbq7KbSC2BaYDWPZVzf3Hc1&sz=w200" style="width:35px;height:35px;" class="icon">' %}
+{% assign img_bass = '<img src="https://drive.google.com/thumbnail?id=11oKrtMR0-P8Fu-p9WD-DhZEKdndNueUb&sz=w200" style="width:35px;height:35px;" class="icon">' %}
+{% assign img_drums = '<img src="https://drive.google.com/thumbnail?id=17SsThTzFP_UC-ZAlBAUMy3lM8Tbpleo1&sz=w200" style="width:35px;height:35px;" class="icon">' %}
+{% assign img_guitar = '<img src="https://drive.google.com/thumbnail?id=11oKrtMR0-P8Fu-p9WD-DhZEKdndNueUb&sz=w200" style="width:35px;height:35px;" class="icon">' %}
+{% assign img_keys = '<img src="https://drive.google.com/thumbnail?id=1fiFOIbZ9WLE2S6eRjJrQPa4sOZXVUdeR&sz=w200" style="width:35px;height:35px;" class="icon">' %}
+{% assign img_vocal = '<img src="https://drive.google.com/thumbnail?id=1EhgyHLvuDxoGB0N1pfJCbtsAZFlrmQ3p&sz=w200" style="width:25px;height:35px;" class="icon">' %}
+{% assign img_worship_lead = '<img src="https://drive.google.com/thumbnail?id=1p5dJ0m7l1SBl5zDprYv9oyHKHgb9l2z_&sz=w200" style="width:25px;height:35px;" class="icon">' %}
+{% assign img_audio = '<img src="https://drive.google.com/thumbnail?id=13C4nZhufcVKRfj-orilWuG9VJvSxH3zv&sz=w200" style="width:35px;height:35px;" class="icon">' %}
+{% assign img_lights = '<img src="https://drive.google.com/thumbnail?id=1kcQTTr4eHKlREdjBiGv8zZlxkqgEPIcK&sz=w200" style="width:35px;height:35px;" class="icon">' %}
+{% assign img_broadcast = '<img src="https://drive.google.com/thumbnail?id=17ICRzG79YADOW4KghUUiZ9Qfd20kbVPU&sz=w200" style="width:35px;height:35px;" class="icon">' %}
+{% assign img_producer = '<img src="https://drive.google.com/thumbnail?id=1jJU9r06Hr0Pne6xt-TJoZcAmRcLnaAPR&sz=w200" style="width:35px;height:35px;" class="icon">' %}
+{% assign img_stage_manager = '<img src="https://drive.google.com/thumbnail?id=1vHYU0V0JN7oWVR0jsuLHxyHk6hjQiphn&sz=w200" style="width:35px;height:35px;" class="icon">' %}
+{% assign img_host = '<img src="https://drive.google.com/thumbnail?id=13d7BD2EHhWeV6nPsWvhs6vytmyGAAdth&sz=w200" style="width:35px;height:35px;" class="icon">' %}
+{% assign img_prod_logo = '<img src="https://drive.google.com/thumbnail?id=1rdJFQ6kobFAbV13aUe3NeF4bMu7OE7VZ&sz=w200">' %}
+{% assign img_frontStageCurve = '<img src="https://drive.google.com/thumbnail?id=1AiEB-5SWP03StJ_0CIJiD_s-t-XQsIV5" style="width:100%;height:50px;">' %}
+  
+ {% comment %} POSITIONS TABLE {% endcomment %}
+
+     {% assign BroadcastAudio_Row = 1 %}   
+     {% assign BroadcastAudio_Column = 1 %}   
+
+     {% assign AssistantMediaDirector_Row = 1 %}   
+     {% assign AssistantMediaDirector_Column = 2 %}   
+
+     {% assign MediaDirector_Row = 1 %}   
+     {% assign MediaDirector_Column = 3 %}   
+
+     {% assign Speaker_Row = 1 %}   
+     {% assign Speaker_Column = 6 %}   
+
+     {% assign Host_Row = 1 %}   
+     {% assign Host_Column = 7 %}   
+    
+     {% assign StageManager_Row = 1 %}   
+     {% assign StageManager_Column = 9 %}   
+
+
+ {% comment %} STAGE PLOT {% endcomment %}
+    
+     {% comment %} Back Line {% endcomment %}          
+     {% assign Cam7_Row = 2 %}   
+     {% assign Cam7_Column = 1 %}   
+
+     {% assign Drum_Row = 2 %}   
+     {% assign Drum_Column = 2 %}  
+
+     {% assign MusicDirector_Row = 2 %}   
+     {% assign MusicDirector_Column = 4 %} 
+
+     {% assign Bass_Row = 2 %}   
+     {% assign Bass_StartColumn = 5 %}   
+     {% assign Bass_CurColumn = Bass_StartColumn %}   
+     {% assign Bass_CurIndex = 0 %} 
+
+     {% assign Electric_Row = 2 %}   
+     {% assign Electric_StartColumn = 7 %}   
+     {% assign Electric_CurColumn = Electric_StartColumn %}   
+     {% assign Electric_CurIndex = 0 %}   
+    
+     {% assign Piano_Row = 2 %}   
+     {% assign Piano_Column = MaxCol | minus: 1 %}   
+
+     {% assign Cam5_Row = 2 %}   
+     {% assign Cam5_Column = MaxCol %} 
+
+    
+     {% comment %} Vocals {% endcomment %}   
+     {% assign Vocal_Row = 3 %}   
+     {% assign Vocal_StartColumn = 4 %}   
+     {% assign Vocal_CurColumn = Vocal_StartColumn %}   
+     {% assign Vocal_CurIndex = 0 %}   
+       
+     {% comment %} Lead {% endcomment %}   
+     {% assign Lead_Row = 4 %}   
+     {% assign Lead_StartColumn = 6 %}   
+     {% assign Lead_CurColumn = Lead_StartColumn %}   
+     {% assign Lead_CurIndex = 0 %}   
+
+ {% comment %} ** OFF STAGE ** {% endcomment %}
+
+     {% assign Cam6_Row = 6 %}   
+     {% assign Cam6_Column = 1 %}   
+
+     {% assign Cam4_Row = 6 %}   
+     {% assign Cam4_Column = MaxCol %} 
+  
+
+ {% comment %} ** FOH AREA ** {% endcomment %}
+
+     {% assign Cam1_Row = 7 %}   
+     {% assign Cam1_Column = 3 %}  
+
+     {% assign Cam2_Row = 7 %}   
+     {% assign Cam2_Column = 5 %} 
+
+     {% assign Cam3_Row = 7 %}   
+     {% assign Cam3_Column = 7 %}   
+
+     {% assign LightDirector_Row = 7 %}   
+     {% assign LightDirector_Column = 9 %}  
+
+     {% assign AudioDirector_Row = 7 %}   
+     {% assign AudioDirector_Column = 10 %}   
+
+     {% assign Producer_Row = 7 %}   
+     {% assign Producer_Column = 11 %} 
+
+
+{% comment %} DATA COLLECTION  {% endcomment %}
+{% assign Electric_NameList = '' %}
+{% assign Bass_NameList = '' %}
+{% assign Vocals_NameList = '' %}
+{% assign WorshipLead_NameList = '' %}
+
+{% assign Cam1_Name = '' %}
+{% assign Cam2_Name = '' %}
+{% assign Cam3_Name = '' %}
+{% assign Cam4_Name = '' %}
+{% assign Cam5_Name = '' %}
+{% assign Cam6_Name = '' %}
+{% assign Cam7_Name = '' %}
+{% assign MediaDirector_Name = '' %}
+{% assign AssistantMediaDirector_Name = '' %}
+{% assign Bass_Name = '' %}
+{% assign Drums_Name = '' %}
+{% assign Keys_Name = '' %}
+{% assign MusicDirector_Name = '' %}
+{% assign AudioDirector_Name = '' %}
+{% assign LightDirector_Name = '' %}
+{% assign Broadcast_Name = '' %}
+{% assign Producer_Name = '' %}
+{% assign StageManager_Name = '' %}
+{% assign Host_Name = '' %}
+{% assign Speaker_Name = '' %}
+
+    {% comment %} TEAM FILLING {% endcomment %}
+
+{% for plan_person in plan.plan_people_not_declined %}
+    {% assign category_lower = plan_person.category.name | downcase %}
+    {% assign category_trimmed = category_lower | strip %}
+    {% assign position_lower = plan_person.position | downcase %}
+    
+    {% assign is_correct_team = false %}
+    {% if detected_day == "production team" %}
+        {% if category_trimmed == "production team" %}
+            {% assign is_correct_team = true %}
+        {% endif %}
+    {% else %}
+        {% if category_lower contains detected_day %}
+            {% assign is_correct_team = true %}
+        {% endif %}
+    {% endif %}
+
+
+    {% comment %} Same crew both days {% endcomment %}
+    {% if position_lower == 'media director' %}
+        {% assign MediaDirector_Name = plan_person.person.name %}
+    {% elsif position_lower == 'assistant media director' %}
+        {% assign AssistantMediaDirector_Name = plan_person.person.name %}
+    {% elsif position_lower contains 'worship leader' %}
+        {% assign WorshipLead_NameList = WorshipLead_NameList | append: ',' | append: plan_person.person.name %}
+    {% elsif position_lower == 'bass' %}
+        {% assign Bass_NameList = Bass_NameList | append: ',' | append: plan_person.person.name %}
+    {% elsif position_lower == 'drums' %}
+        {% assign Drums_Name = plan_person.person.name %}
+    {% elsif position_lower == 'electric' or position_lower == 'violin' or position_lower == 'acoustic' %}
+        {% assign Electric_NameList = Electric_NameList | append: ',' | append: plan_person.person.name %}
+    {% elsif position_lower == 'keys' %}
+        {% assign Keys_Name = plan_person.person.name %}
+    {% elsif position_lower == 'music director' %}
+        {% assign MusicDirector_Name = plan_person.person.name %}
+    {% elsif position_lower == 'vocals' or position_lower == 'alto' or position_lower == 'soprano' or position_lower == 'tenor'%}
+        {% assign Vocals_NameList = Vocals_NameList | append: ',' | append: plan_person.person.name %}
+    {% elsif position_lower == 'foh audio' %}
+        {% assign AudioDirector_Name = plan_person.person.name %}
+    {% elsif position_lower == 'lights' or position_lower == 'lighting' %}
+        {% assign LightDirector_Name = plan_person.person.name %}
+    {% elsif position_lower == 'monitors audio' %}
+        {% assign Broadcast_Name = plan_person.person.name %}
+    {% elsif position_lower == 'producer' %}
+        {% assign Producer_Name = plan_person.person.name %}
+    {% elsif position_lower == 'stage manager' %}
+        {% assign StageManager_Name = plan_person.person.name %}
+    {% elsif position_lower == 'live welcome host' %}
+        {% assign Host_Name = plan_person.person.name %}
+    {% endif %}
+
+    {% comment %} different crew based on day {% endcomment %}
+    {% if is_correct_team %}
+        {% if position_lower == 'camera 1' %}
+            {% assign Cam1_Name = plan_person.person.name %}
+        {% elsif position_lower == 'camera 2' %}
+            {% assign Cam2_Name = plan_person.person.name %}
+        {% elsif position_lower == 'camera 3 (track)' or position_lower == 'camera 3' %}
+            {% assign Cam3_Name = plan_person.person.name %}
+        {% elsif position_lower == 'camera 4 (jib)' or position_lower == 'camera 4' %}
+            {% assign Cam4_Name = plan_person.person.name %}
+        {% elsif position_lower == 'camera 5 (roam)' or position_lower == 'camera 5' %}
+            {% assign Cam5_Name = plan_person.person.name %}
+        {% elsif position_lower == 'camera 6 (roam)' or position_lower == 'camera 6' %}
+            {% assign Cam6_Name = plan_person.person.name %}
+        {% elsif position_lower == 'camera 7 (drums)' or position_lower == 'camera 7' %}
+            {% assign Cam7_Name = plan_person.person.name %}
+        {% endif %}
+    {% endif %}
+{% endfor %}
+
+{% assign Electric_NameList = Electric_NameList | remove_first: ',' | split: ',' %}
+{% assign Bass_NameList = Bass_NameList | remove_first: ',' | split: ',' %}
+{% assign Vocals_NameList = Vocals_NameList | remove_first: ',' | split: ',' %}
+{% assign WorshipLead_NameList = WorshipLead_NameList | remove_first: ',' | split: ',' %}
+
+
+{% comment %} Save Headers and notes AND Compute LEFT/RIGHT Wrap Point {% endcomment %}
+{% assign current_tally = 0 %}
+{% assign break_item_index = 999 %} {% comment %} Default to a high number {% endcomment %}
+{% assign left_column_content = "" %}
+{% assign right_column_content = "" %}
+{% assign running_weight = 0 %}
+
+{% for item in plan.items %}
+  {% assign title_lower = item.title | downcase %}
+  {% if item.item_type != "Header" and title_lower != "video: 10 minute countdown" %}    
+    {% assign item_weight = 2 %} {% comment %} 2 units for Title {% endcomment %}
+
+    {% capture item_notes %}
+       {% if item.title == "Baptisms" or item.title == "Child Dedication" %}
+          {{ item.description | newline_to_br }}
+       {% endif %} 
+
+       {% comment %} Only print lines that say "Lead" {% endcomment %}
+       {% for note in item.notes %}
+         {% if note.category_name == "Vocal" %}
+           {% assign descriptionList =  note.note | newline_to_br | split: '<br />' %}
+           {% for descriptionLine in descriptionList %}
+              {% if descriptionLine contains "Lead" %}
+                 {{ descriptionLine }}
+              {% endif %}
+           {% endfor %}
+         {% endif %}
+       {% endfor %}
+    {% endcapture %}
+
+    {% comment %} Add 1 unit per line of notes {% endcomment %}
+    {% assign note_lines = item_notes | strip_newlines | split: "<br />" %}
+    {% assign item_weight = item_weight | plus: note_lines.size %}
+
+    {% comment %} Build item data for later parsing {% endcomment %}
+    {% capture item_packet %}
+      {{ item.length }}##{{ item.title }}##{{ item_notes | strip_newlines }}||
+    {% endcapture %}
+
+    {% assign running_weight = running_weight | plus: item_weight %} 
+
+    {% comment %} If this item pushes us over the limit, this and all following items go right {% endcomment %}
+    {% if running_weight <= max_sidebar_weight %}
+      {% assign left_column_content = left_column_content | append: item_packet %}
+    {% else %}
+      {% assign right_column_content = right_column_content | append: item_packet %}
+    {% endif %}
+  {% endif %}
+{% endfor %}
+
+<html>
+
+    <head>
+        <title>{{ plan.ministry.name }}:: {{ plan.dates }}</title>
+        <style>
+            
+            body { padding:0; margin:5px; color: #313336;
+                   font: 13px/1.5 "Myriad Pro", "Myriad", "Lucida Grande", "Lucida Sans Unicode", Helvetica, Arial, Verdana, sans-serif;
+                 }
+
+            hr { 
+               display: block;
+               margin-top: 0.5em;
+               margin-bottom: 0.5em;
+               margin-left: auto;
+               margin-right: auto;
+               border-style: inset;
+               border-width: 3px;
+               }
+
+          #header {
+             padding: 5px 20px;
+             background: black;
+             color: white;
+             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+             border-bottom: 1px solid #444B57;
+             border-left: 1px solid #4A5A72;
+             border-right: 1px solid #4A5A72;
+             box-shadow: 0 1px 0 rgba(255, 255, 255, 0.1) inset;
+             line-height: .8em;
+             margin: 0;
+             margin-bottom: 15px;
+          }
+          
+          #header img { float: right; height: 80px; margin-right: -15px; }
+ 
+          #titles img { border: 2px solid #C4C9D4;
+              border-image: initial;
+          }
+          
+         /* Table cell styling  */
+        .role-label {
+           color: Gray;
+           font-size: 8pt;
+           font-style: italic;
+           font-weight: bold;
+         }
+
+        .person-name {
+           font-weight: bold;
+           color: white;
+           font-size: 10pt;
+         }
+
+        .sidebar-content {
+           vertical-align: top;
+           background-color: black;
+           font-weight: bold;
+           color: white;
+           padding-left: 30px;
+           padding-top: 20px;
+           font-size: 14pt;
+           width: 20%;
+         }
+
+       .main-content {
+          vertical-align: top;
+          background-color: black;
+          font-weight: bold;
+          color: white;
+          font-size: 12pt;
+          width: 60%;
+       }
+
+       .grid-cell {
+          text-align: center;
+          vertical-align: top;
+          background-color: black;
+          font-weight: bold;
+          color: white;
+          white-space: nowrap;
+          border: none;
+        }
+
+        /* Icon sizing */
+      .icon {
+         display: block;
+         margin: 0 auto;
+      }
+
+      /* Song/item listing */
+      .item-length {
+         vertical-align: top;
+         background-color: black;
+         font-weight: bold;
+         color: white;
+         font-size: 14pt;
+      }
+
+      .item-details {
+         vertical-align: top;
+         background-color: black;
+         font-weight: bold;
+         color: white;
+         font-size: 14pt;
+       }
+
+      .item-notes {
+         font-size: 10pt;
+         color: grey;
+      }
+
+      /* Layout containers */
+      .header-bar {
+         background-color: black;
+         height: 6pt;
+         margin: 5pt 0;
+      }
+
+     .layout-table {
+        width: 100%;
+     }
+
+     /* Divider styling */
+    hr {
+       border: 0;
+       height: 1px;
+       background-color: #444;
+       margin: 10px 0;
+    }
+
+        </style>
+    </head>
+<body>
+
+  <!-- PAGE TABLE -->
+  <div style="background-color: black; height: 6pt; margin: 5pt 0;">
+  <table width="100%;">
+  <tr>
+    <!-- LEFT SIDEBAR -->
+    <td class="sidebar-content">
+          {{ img_prod_logo}}
+{% comment %} Left hand table for songs and live welcome notes.  Song notes are limited to just the lines that say lead.{% endcomment %}
+
+       <table>
+            {% assign left_items = left_column_content | split: "||" %}
+            {% for packet in left_items %}
+                  {% assign details = packet | split: "##" %}       
+                  <tr>
+                     <td class="item-length">{{details[0]}}</td>
+                     <td class="item-details">{{ details[1] }}
+                         <div class="item-notes">{{ details[2] }}</div> 
+                     </td>
+                  </tr>
+                  {% endfor %}     
+       </table>
+   </td>
+
+
+  <td class="main-content">
+  <div style="background-repeat: no-repeat;
+       background-size: cover;
+       style='align:top;'">
+
+    
+{% comment %}CENTER AREA{% endcomment %}
+      <table class="production-grid">
+ 
+       {% for curRow in (1..7) %}
+          {% comment %} Insert HR divider after row 1 {% endcomment %}
+          {% if curRow == 2 %}
+             <tr class="divider-row">
+                 <td colspan="{{MaxCol}}" class="divider-cell">
+                    <hr>
+                 </td>
+             </tr>
+          {% endif %}
+        
+          {% comment %} Insert stage curve after row 5 (end of stage section) {% endcomment %}
+          {% if curRow == 6 %}
+             <tr class="divider-row">
+                 <td colspan="{{MaxCol}}" class="divider-cell">
+                     {{img_frontStageCurve}}
+                 </td>
+             </tr>
+          {% endif %}
+        
+          <tr>
+          {% for curCol in (1..MaxCol) %}
+             <td class="grid-cell">
+                 {% if BroadcastAudio_Row == curRow and BroadcastAudio_Column == curCol %}
+                    <p class="role-label">BROADCAST AUDIO</p>
+                    {{img_broadcast}}
+                    <p class="person-name">{{ Broadcast_Name }}</p>
+                 {% elsif AssistantMediaDirector_Row == curRow and AssistantMediaDirector_Column == curCol %}
+                    <p class="role-label">AD</p>
+                    {{img_asst_media_director}}
+                    <p class="person-name">{{ AssistantMediaDirector_Name }}</p>               
+                 {% elsif MediaDirector_Row == curRow and MediaDirector_Column == curCol %}
+                    <p class="role-label">DIRECTOR</p>
+                    {{img_media_director}}
+                    <p class="person-name">{{ MediaDirector_Name }}</p>                
+                 {% elsif Speaker_Row == curRow and Speaker_Column == curCol %}
+                    <p class="role-label">SPEAKER</p>
+                    {{Speaker_Img}}
+                    <p class="person-name">{{ Speaker_Name }}</p>              
+                 {% elsif Host_Row == curRow and Host_Column == curCol %}
+                     <p class="role-label">HOST</p>
+                    {{img_host}}
+                    <p class="person-name">{{ Host_Name }}</p>                 
+                 {% elsif StageManager_Row == curRow and StageManager_Column == curCol %}
+                    <p class="role-label">STAGE MANAGER</p> 
+                    {{img_stage_manager}}
+                    <p class="person-name">{{ StageManager_Name }}</p> 
+               
+                 {% elsif Cam7_Row == curRow and Cam7_Column == curCol %}
+                    <p class="role-label">CAM 7</p>
+                    {{img_camera_roam}}
+                    <p class="person-name">{{ Cam7_Name }}</p>                  
+                 {% elsif Drum_Row == curRow and Drum_Column == curCol %}
+                    {{img_drums}}
+                    <p class="person-name">{{ Drums_Name }}</p>                   
+                 {% elsif Piano_Row == curRow and Piano_Column == curCol %}
+                    {{img_keys}}
+                    <p class="person-name">{{ Keys_Name }}</p>   
+                 {% elsif Cam5_Row == curRow and Cam5_Column == curCol %}
+                    <p class="role-label">CAM 5</p> 
+                    {{img_camera_roam}}
+                    <p class="person-name">{{ Cam5_Name }}</p>
+
+                 {% elsif Electric_Row == curRow and Electric_CurColumn == curCol and Electric_CurIndex < Electric_NameList.size %}
+                    {% assign current_electric_name = Electric_NameList[Electric_CurIndex] %}
+                    {% unless current_electric_name == MusicDirector_Name %}                                                                                                            
+                       {{img_guitar}}
+                       <p class="person-name">{{ Electric_NameList[Electric_CurIndex] }}</p> 
+                       {% assign Electric_CurColumn = Electric_CurColumn | plus: 2 %}
+                       {% assign Electric_CurIndex = Electric_CurIndex | plus: 1 %}
+                     {% endunless %}                                                                                                          
+                                                                                                                                
+                 {% elsif Bass_Row == curRow and Bass_Column == curCol %}
+                    {{img_bass}}                                                                                                       
+                    <p class="person-name">{{Bass_Name}}</p>      
+                                                                                                                                
+                 {% elsif MusicDirector_Row == curRow and MusicDirector_Column == curCol %}
+                    {{img_guitar}}                                                                                                       
+                    <p class="person-name">{{MusicDirector_Name}}</p>      
+                                                                                                                                
+                 {% elsif Vocal_Row == curRow and Vocal_CurColumn == curCol and Vocal_CurIndex < Vocals_NameList.size %}
+                    {{img_vocal}}
+                   <p class="person-name">{{ Vocals_NameList[Vocal_CurIndex] }}</p>
+                    {% assign Vocal_CurColumn = Vocal_CurColumn | plus: 2 %}
+                    {% assign Vocal_CurIndex = Vocal_CurIndex | plus: 1 %}
+                   
+                 {% elsif Lead_Row == curRow and Lead_CurColumn == curCol and Lead_CurIndex < WorshipLead_NameList.size %}
+                    {{img_vocal}}
+                    <p class="person-name">{{ WorshipLead_NameList[Lead_CurIndex] }}</p>
+                    {% assign Lead_CurColumn = Lead_CurColumn | plus: 2 %}
+                    {% assign Lead_CurIndex = Lead_CurIndex | plus: 1 %}
+    
+                 {% elsif Cam6_Row == curRow and Cam6_Column == curCol %}
+                    <p class="role-label">CAM 6</p>
+                    {{img_camera_roam}}
+                    <p class="person-name">{{ Cam6_Name }}</p>   
+                   
+                 {% elsif Cam4_Row == curRow and Cam4_Column == curCol %}
+                    <p class="role-label">CAM 4</p>
+                    {{img_camera_jib}}
+                    <p class="person-name">{{ Cam4_Name }}</p>  
+
+                 {% elsif Cam3_Row == curRow and Cam3_Column == curCol %}
+                    <p class="role-label">CAM 3</p>
+                    {{img_camera_track}}
+                    <p class="person-name">{{ Cam3_Name }}</p>                  
+
+                 {% elsif Cam2_Row == curRow and Cam2_Column == curCol %}
+                    <p class="role-label">CAM 2</p>
+                    {{img_camera}}
+                    <p class="person-name">{{ Cam2_Name }}</p>                   
+                 {% elsif Cam1_Row == curRow and Cam1_Column == curCol %}
+                    <p class="role-label">CAM 1</p>
+                    {{img_camera}}
+                    <p class="person-name">{{ Cam1_Name }}</p>                   
+                 {% elsif Producer_Row == curRow and Producer_Column == curCol %}
+                    <p class="role-label">PRODUCER</p>
+                    {{img_producer}}
+                    <p class="person-name">{{ Producer_Name }}</p>                   
+                 {% elsif AudioDirector_Row == curRow and AudioDirector_Column == curCol %}
+                    <p class="role-label">AUDIO DIRECTOR</p>
+                    {{img_audio}}
+                    <p class="person-name">{{ AudioDirector_Name }}</p>               
+                 {% elsif LightDirector_Row == curRow and LightDirector_Column == curCol %}
+                    <p class="role-label">LIGHTING DIRECTOR</p>
+                    {{img_lights}}
+                    <p class="person-name">{{ LightDirector_Name }}</p>                  
+   
+                 {% else %}
+                  &nbsp;   
+                 {% endif %}
+          </td>
+          {% endfor %}
+        </tr>
+       {% endfor %}
+      </table>
+      </div>
+  </td>
+
+ {% comment %} RIGHT TABLE {% endcomment %}
+    
+       <td class="sidebar-content">
+          {{img_prod_logo}}
+          <table>
+                   {% assign left_items = right_column_content | split: "||" %}
+                   {% for packet in left_items %}
+                        {% assign details = packet | split: "##" %}
+                        <tr>
+                          <td class="item-length">{{details[0]}}</td>
+                          <td class="item-details">{{ details[1] }}
+                            <div class="item-notes">{{ details[2] }}</div> 
+                         </td>
+                  </tr>
+                  {% endfor %}        
+            </table>
+     </td>
+  </tr>
+ </div>
+  </td>  
+  </table>
+</div>
+</body>
+</html>
