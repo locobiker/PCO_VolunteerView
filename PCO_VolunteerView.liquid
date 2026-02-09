@@ -1,4 +1,3 @@
-
 <!--
   Jan 2026 Updates:
 - Plugged it into AI and it recommended to use the CSS Grid structure.  Which worked great in Web printout, but not PDF.  We want it working for both.
@@ -29,7 +28,7 @@ QUICK CUSTOMIZATION:
     {% assign category_lower = plan_person.category.name | downcase %}
     {% assign category_trimmed = category_lower | strip %}
     
-    {% if category_trimmed == "production team" %}
+    {% if category_trimmed == "production" %}
         {% assign has_generic_team = true %}
     {% endif %}
     
@@ -42,7 +41,7 @@ QUICK CUSTOMIZATION:
 {% endfor %}
 
 {% if has_generic_team %}
-    {% assign detected_day = "production team" %}
+    {% assign detected_day = "production" %}
 {% else %}
     {% assign current_date = "now" | date: "%Y-%m-%d %H:%M" %}
     {% assign day_of_week = "now" | date: "%A" %}
@@ -51,7 +50,7 @@ QUICK CUSTOMIZATION:
     
     {% if day_of_week_lower == "sunday" %}
         {% assign detected_day = "sunday" %}
-    {% elsif day_of_week_lower == "saturday" and current_hour >= 17 %}
+    {% elsif day_of_week_lower == "saturday" and current_hour >= 23 %}
         {% assign detected_day = "sunday" %}
     {% else %}
         {% assign detected_day = "saturday" %}
@@ -299,15 +298,17 @@ QUICK CUSTOMIZATION:
     {% capture item_notes %}
        {% if item.title == "Baptisms" or item.title == "Child Dedication" %}
           {{ item.description | newline_to_br }}
+       {% elsif item.title contains "Live Welcome" %}
+          {{ item.description | newline_to_br }}
        {% endif %} 
 
        {% comment %} Only print lines that say "Lead" {% endcomment %}
        {% for note in item.notes %}
-         {% if note.category_name == "Vocal" %}
+         {% if note.category_name contains "Vocal" or note.category_name contains "Person" %}
            {% assign descriptionList =  note.note | newline_to_br | split: '<br />' %}
            {% for descriptionLine in descriptionList %}
               {% if descriptionLine contains "Lead" %}
-                 {{ descriptionLine }}
+                 {{ descriptionLine }}<br>
               {% endif %}
            {% endfor %}
          {% endif %}
@@ -533,7 +534,6 @@ QUICK CUSTOMIZATION:
                   {% endfor %}     
        </table>
    </td>
-
 
   <td class="main-content">
   <div style="background-repeat: no-repeat;
