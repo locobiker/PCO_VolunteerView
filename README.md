@@ -2,6 +2,8 @@
 
 This custom report provides a comprehensive, high-level view of the Order of Service and team positions. It is designed to be exported as a PDF and displayed on a production room monitor for real-time situational awareness.
 
+![Example](PCO_MediaRoom_2026.png)
+
 ---
 
 ## 🚀 Overview
